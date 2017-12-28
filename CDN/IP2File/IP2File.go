@@ -128,13 +128,16 @@ func IP2File(file string, wg *sync.WaitGroup) {
 }
 
 func main() {
+	n := 0
 	for _, file := range os.Args[1:] {
 		fmt.Println(file)
-		for n := 0; n < 10; n++ {
-			wg.Add(1)
-			go IP2File(file, &wg)
+		n++
+		wg.Add(1)
+		go IP2File(file, &wg)
+		if n >= 10 {
+			wg.Wait()
+			n = 0
 		}
-		wg.Wait()
 	}
 
 	return
