@@ -134,7 +134,7 @@ func main() {
 		n++
 		wg.Add(1)
 		go IP2File(file, &wg)
-		if n >= 10 {
+		if n >= 100 {
 			wg.Wait()
 			n = 0
 		}
