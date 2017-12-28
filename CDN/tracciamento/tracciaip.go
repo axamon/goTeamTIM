@@ -39,7 +39,7 @@ func main() {
 		os.Exit(202)
 	}
 	date := "20171115"
-	res, err := RedisClient.Keys(date + "_" + ipclient).Result()
+	res, err := RedisClient.SMembers(date + "_" + ipclient).Result()
 	if err != nil {
 		fmt.Println(err)
 	}
