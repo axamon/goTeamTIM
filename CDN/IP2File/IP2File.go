@@ -36,9 +36,10 @@ type Accesslog struct {
 }
 
 var (
+	//Redispwd è la password per redis
 	Redispwd = os.Getenv("REDIS_PWD")
 
-	//Creazione client Redis
+	//RedisClient è il  client Redis
 	RedisClient = redis.NewClient(&redis.Options{ //connettiti a Redis server
 		Addr:     "localhost:6379",
 		Password: Redispwd, // no password set
@@ -73,6 +74,7 @@ func IP2File(file string, wg *sync.WaitGroup) {
 	//SEIp := fileelements[3]                  //qui prende l'ip della cache
 	data := fileelements[4] //qui prende la data(
 	pipe := RedisClient.Pipeline()
+	n := 0
 	if Type == "accesslog" { //se il tipo di log è "accesslog"
 		scan := bufio.NewScanner(gr)
 		var saltariga int //per saltare le prime righe inutili
@@ -100,7 +102,14 @@ func IP2File(file string, wg *sync.WaitGroup) {
 			}
 			t10g := (10 * 24 * time.Hour)
 			pipe.Expire(key, t10g) //la chiave spira dopo 10 gg
-
+			n++
+			if n >= 100 {
+				_, err := pipe.Exec()
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(200)
+				}
+			}
 		}
 		//RedisClient.Pipeline().Close()
 
