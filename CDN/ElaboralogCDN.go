@@ -22,9 +22,10 @@ import (
 )
 
 var (
+	//Redispwd è la password per accedere a redis va impostata nell'ambiente dello user con variabile REDIS_PWD
 	Redispwd = os.Getenv("REDIS_PWD")
 
-	//Creazione client Redis
+	//RedisClient è il client Redis utilizabile
 	RedisClient = redis.NewClient(&redis.Options{ //connettiti a Redis server
 		Addr:     "localhost:6379",
 		Password: Redispwd, // no password set
@@ -47,6 +48,7 @@ func init() {
 	}
 }
 
+//Log permette l'unmarshalling dei file json
 type Log struct {
 	Type         string `json:"type"`
 	Time         string `json:"time"`
@@ -145,6 +147,7 @@ type Ingestlog struct {
 
 // var wg = sizedwaitgroup.New(250) //massimo numero di go routine per volta
 
+//Leggizip riceve come argomento un file CDN zippato e lo processa
 func Leggizip(file string, wg *sync.WaitGroup) {
 	defer wg.Done()
 
