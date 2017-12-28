@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/ioutil"
 	"net/url"
 	"projects/goTeamTIM/elasticTIM"
 	"runtime"
@@ -19,46 +20,6 @@ import (
 
 	"strings"
 )
-
-const mapping = `
-{
-	"settings":{
-		"number_of_shards": 1,
-		"number_of_replicas": 0
-	},
-	"mappings":{
-		"log":{
-			"properties":{
-				"IdStr":{
-					"type":"keyword"
-				},
-				"ScreenName":{
-					"type":"keyword"
-				},
-				"FullText":{
-					"type":"text",
-					"store": true,
-					"fielddata": true
-				},
-				"image":{
-					"type":"keyword"
-				},
-				"CreatedAt":{
-					"type":"date"
-				},
-				"tags":{
-					"type":"keyword"
-				},
-				"location":{
-					"type":"keyword"
-				},
-				"suggest_field":{
-					"type":"completion"
-				}
-			}
-		}
-	}
-}`
 
 var (
 	Redispwd = os.Getenv("REDIS_PWD")
@@ -353,6 +314,8 @@ func main() {
 		go Leggizip(file, &wg)
 	}
 	wg.Wait()
+	dat, _ := ioutil.ReadFile("mapping.json")
+	mapping := string(dat)
 	elasticTIM.IngestaInElastic("http://127.0.0.1:9200", "cdn", "log", Listalog, mapping)
 
 	return
