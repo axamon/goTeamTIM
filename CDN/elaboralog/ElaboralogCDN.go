@@ -1,10 +1,7 @@
-package main
+package elaboralog
 
 import (
-	"io/ioutil"
 	"net/url"
-	"projects/goTeamTIM/elasticTIM"
-	"runtime"
 	"strconv"
 	"sync"
 	"time"
@@ -315,24 +312,4 @@ func Leggizip(file string, wg *sync.WaitGroup) {
 	}
 
 	return //terminata la Go routine!!! :)
-}
-
-func main() {
-
-	//trace.Start(os.Stdout)
-	//defer trace.Stop()
-
-	runtime.GOMAXPROCS(runtime.NumCPU()) //esegue una go routine su tutti i processori
-
-	for _, file := range os.Args[1:] {
-		fmt.Println(file)
-		wg.Add(1)
-		go Leggizip(file, &wg)
-	}
-	wg.Wait()
-	dat, _ := ioutil.ReadFile("mapping.json")
-	mapping := string(dat)
-	elasticTIM.IngestaInElastic("http://127.0.0.1:9200", "cdn", "log", Listalog, mapping)
-
-	return
 }

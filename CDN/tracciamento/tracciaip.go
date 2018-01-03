@@ -6,6 +6,8 @@ import (
 	"os"
 	"sync"
 
+	_ "projects/goTeamTIM/CDN/elaboralog"
+
 	"github.com/go-redis/redis"
 )
 
@@ -42,6 +44,9 @@ func main() {
 	res, err := RedisClient.SMembers(date + "_" + ipclient).Result()
 	if err != nil {
 		fmt.Println(err)
+	}
+	for logfile := range res {
+		elaboralog.Leggizip(logfile)
 	}
 	fmt.Println(res)
 }
