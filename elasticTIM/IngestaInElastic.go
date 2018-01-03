@@ -40,6 +40,10 @@ func IngestaInElastic(elastichost, index, tipo, lista, mapping string) {
 
 	//Istanzia client per Elasticsearch
 	client, err := elastic.NewClient(elastic.SetURL(elastichost))
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(401)
+	}
 	//.elastic.SetBasicAuth("user", "secret"))
 
 	_, _, errela := client.Ping(elastichost).Do(ctx)
