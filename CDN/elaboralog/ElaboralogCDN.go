@@ -81,7 +81,7 @@ type Accesslog struct {
 	Clientip   string
 	Request    string
 	TCPStatus  string
-	HTTPStatus string
+	HTTPStatus int
 	Bytes      int
 	Speed      float32
 	Method     string
@@ -200,7 +200,10 @@ func Leggizip(file string, wg *sync.WaitGroup) {
 			Request := s[3]
 			elements := strings.Split(Request, "/")
 			TCPStatus := elements[0]
-			HTTPStatus := elements[1]
+			HTTPStatus, _ := strconv.Atoi(elements[1])
+			if HTTPStatus < 400 {
+				continue
+			}
 			Bytes, _ := strconv.Atoi(s[4])
 			Speed := float32(Bytes / TTS)
 			Method := s[5]
