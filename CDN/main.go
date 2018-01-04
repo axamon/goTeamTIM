@@ -31,7 +31,7 @@ func main() {
 	wg.Wait()
 	dat, _ := ioutil.ReadFile("mapping.json")
 	mapping := string(dat)
-	elasticTIM.IngestaInElastic("mammolo-logginator.westeurope.cloudapp.azure.com:9200", "cdn", "log", Listalog, mapping)
+	elasticTIM.IngestaInElastic("http://127.0.0.1:9200", "cdn", "log", Listalog, mapping)
 
 	return
 }
