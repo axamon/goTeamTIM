@@ -80,6 +80,7 @@ type Accesslog struct {
 	Clientip string
 	Request  string
 	Bytes    int
+	Speed    int
 	Method   string
 	//Url         string
 	Urlschema   string
@@ -195,6 +196,7 @@ func Leggizip(file string, wg *sync.WaitGroup) {
 			Clientip := s[2]
 			Request := s[3]
 			Bytes, _ := strconv.Atoi(s[4])
+			Speed := Bytes / TTS
 			Method := s[5]
 			//Url := s[6]
 			Urlschema := u.Scheme
@@ -214,6 +216,7 @@ func Leggizip(file string, wg *sync.WaitGroup) {
 				Clientip:    Clientip,
 				Request:     Request,
 				Bytes:       Bytes,
+				Speed:       Speed,
 				Method:      Method,
 				Urlschema:   Urlschema,
 				Urlhost:     Urlhost,
