@@ -86,7 +86,7 @@ func IngestaInElastic(elastichost, index, tipo, lista, mapping string) {
 		fmt.Println(num)
 
 		//facciamo dei mazzi
-		mazzo := 5000   //Quanti record da gestire insieme
+		mazzo := 5      //Quanti record da gestire insieme
 		numroutine := 5 //Quante Go routine usare
 
 		//Dividiamo il carico dell'ingestamento su più go routine
