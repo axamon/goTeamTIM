@@ -197,7 +197,7 @@ func Leggizip(file string, wg *sync.WaitGroup) {
 			Clientip := s[2]
 			Request := s[3]
 			Bytes, _ := strconv.Atoi(s[4])
-			Speed := Bytes / TTS
+			Speed := float32(Bytes / TTS)
 			Method := s[5]
 			//Url := s[6]
 			Urlschema := u.Scheme
