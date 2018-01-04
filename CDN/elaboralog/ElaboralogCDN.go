@@ -81,7 +81,7 @@ type Accesslog struct {
 	Clientip string
 	Request  string
 	Bytes    int
-	Speed    int
+	Speed    float32
 	Method   string
 	//Url         string
 	Urlschema   string
