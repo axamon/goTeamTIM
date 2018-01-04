@@ -2,6 +2,7 @@ package elaboralog
 
 import (
 	"net/url"
+	"projects/goTeamTIM/elasticTIM"
 	"strconv"
 	"sync"
 	"time"
@@ -147,7 +148,7 @@ type Ingestlog struct {
 // var wg = sizedwaitgroup.New(250) //massimo numero di go routine per volta
 
 //Leggizip riceve come argomento un file CDN zippato e lo processa
-func Leggizip(file string, wg *sync.WaitGroup) {
+func Leggizip(file string, wg *sync.WaitGroup) (elenco []string) {
 	defer wg.Done()
 
 	f, err := os.Open(file)
@@ -166,9 +167,10 @@ func Leggizip(file string, wg *sync.WaitGroup) {
 	fileelements := strings.Split(file, "_") //prende il nome del file di log e recupera i campi utili
 	Type := fileelements[1]                  //qui prede il tipo di log
 	SEIp := fileelements[3]                  //qui prende l'ip della cache
-	elenco := make([]string, 0, 1000)
+	elenco := make([]string)
 
 	if Type == "accesslog" { //se il tipo di log è "accesslog"
+		
 		scan := bufio.NewScanner(gr)
 		var saltariga int //per saltare le prime righe inutili
 		for scan.Scan() {
@@ -231,9 +233,9 @@ func Leggizip(file string, wg *sync.WaitGroup) {
 			elerecord3 := string(elerecord2)
 
 			elenco = append(elenco, elerecord3) //mettiamo tutto in una slice
-			fmt.Println(len(elenco), cap(elenco))
-			if len(elenco) >= 1000 { //se la slice supera il limite imposto
-				pipe := RedisClient.Pipeline() // si attiva una pipeline su redis
+			//fmt.Println(len(elenco), cap(elenco))
+			//if len(elenco) >= 1000 { //se la slice supera il limite imposto
+				/* pipe := RedisClient.Pipeline() // si attiva una pipeline su redis
 				for _, item := range elenco {  // uno per uno si scarica la slice
 					err := pipe.LPush(Listalog, item).Err() //e la si mette nel pipe
 					if err != nil {                         // se ci sono errori blocca tutto
@@ -246,8 +248,9 @@ func Leggizip(file string, wg *sync.WaitGroup) {
 				if err != nil { //se ci sono errori stoppa tutto
 					fmt.Println(err)
 					os.Exit(401)
-				}
-				elenco = make([]string, 0, 1000) //ripulisce la slice
+				} */
+				/* elasticTIM.IngestaInElastic("http://127.0.0.1:9200", "cdn", "log", Listalog, mapping)
+				elenco = make([]string, 0, 1000) //ripulisce la slice */
 			}
 		}
 	}
