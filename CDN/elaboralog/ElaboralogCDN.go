@@ -74,15 +74,17 @@ type Log struct {
 //Accesslog è il Template dei log Transaction
 type Accesslog struct {
 	//Hash        string
-	Type     string
-	Time     string
-	TTS      int
-	SEIp     string
-	Clientip string
-	Request  string
-	Bytes    int
-	Speed    float32
-	Method   string
+	Type       string
+	Time       string
+	TTS        int
+	SEIp       string
+	Clientip   string
+	Request    string
+	TCPStatus  string
+	HTTPStatus string
+	Bytes      int
+	Speed      float32
+	Method     string
 	//Url         string
 	Urlschema   string
 	Urlhost     string
@@ -196,6 +198,9 @@ func Leggizip(file string, wg *sync.WaitGroup) {
 			TTS, _ := strconv.Atoi(s[1])
 			Clientip := s[2]
 			Request := s[3]
+			elements := strings.Split(Request, "/")
+			TCPStatus := elements[0]
+			HTTPStatus := elements[1]
 			Bytes, _ := strconv.Atoi(s[4])
 			Speed := float32(Bytes / TTS)
 			Method := s[5]
@@ -216,6 +221,8 @@ func Leggizip(file string, wg *sync.WaitGroup) {
 				SEIp:        SEIp,
 				Clientip:    Clientip,
 				Request:     Request,
+				TCPStatus:   TCPStatus,
+				HTTPStatus:  HTTPStatus,
 				Bytes:       Bytes,
 				Speed:       Speed,
 				Method:      Method,
