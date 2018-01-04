@@ -29,6 +29,7 @@ var (
 		DB:       0,        // use default DB
 	})
 
+	//Sync group
 	wg sync.WaitGroup
 
 	//Listalog è il nome della lista in redis dove accodare i record json
