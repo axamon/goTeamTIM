@@ -6,20 +6,18 @@ import (
 	"projects/goTeamTIM/CDN/elaboralog"
 	"runtime"
 	"sync"
-
-	"github.com/go-redis/redis"
 )
 
 var (
 	//Redispwd è la password per accedere a redis va impostata nell'ambiente dello user con variabile REDIS_PWD
-	Redispwd = os.Getenv("REDIS_PWD")
+	/* 	Redispwd = os.Getenv("REDIS_PWD")
 
-	//RedisClient è il client Redis utilizabile
-	RedisClient = redis.NewClient(&redis.Options{ //connettiti a Redis server
-		Addr:     "localhost:6379",
-		Password: Redispwd, // no password set
-		DB:       0,        // use default DB
-	})
+	   	//RedisClient è il client Redis utilizabile
+	   	RedisClient = redis.NewClient(&redis.Options{ //connettiti a Redis server
+	   		Addr:     "localhost:6379",
+	   		Password: Redispwd, // no password set
+	   		DB:       0,        // use default DB
+	   	}) */
 
 	//Sync group
 	wg sync.WaitGroup
@@ -28,7 +26,7 @@ var (
 	Listalog = "cdnrecords"
 )
 
-func init() {
+/* func init() {
 	//Verifica che Redis risponda
 	_, errore := RedisClient.Ping().Result()
 	if errore != nil {
@@ -36,7 +34,7 @@ func init() {
 		fmt.Println("la pwd per redis va impostata così: export REDIS_PWD=***")
 		//os.Exit(1)
 	}
-}
+} */
 
 func main() {
 
@@ -45,13 +43,7 @@ func main() {
 
 	runtime.GOMAXPROCS(runtime.NumCPU()) //esegue una go routine su tutti i processori
 
-	for {
-		res := RedisClient.BRPop(50000000000, os.Args[1]).Val()
-		/* if err != nil {
-			fmt.Println(err)
-			os.Exit(500)
-		} */
-		file := res[1]
+	for _, file := range os.Args[1:] {
 		fmt.Println(file)
 		wg.Add(1)
 		go elaboralog.Leggizip(file, &wg)
