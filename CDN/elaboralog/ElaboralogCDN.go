@@ -358,10 +358,8 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 	elastichost := "http://127.0.0.1:9200"
 	index := "we_accesslog_" + SEIp + "_" + data
 	fmt.Println("index: ", index, Type)
-
+	ctx := context.Background()
 	if Type == "accesslog" { //se il tipo di log è "accesslog"
-		ctx := context.Background()
-
 		//Istanzia client per Elasticsearch
 		client, err := elastic.NewClient(elastic.SetURL(elastichost))
 		if err != nil {
@@ -482,8 +480,7 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 			tipo := "accesslog"
 			req := elastic.NewBulkIndexRequest().Index(index).Type(tipo).Id(Hash).Doc(recordjson)
 			cb.Add(req)
-			fmt.Println("aggiunto record")
-			_, err = cb.Do(ctx)
+			//fmt.Println("aggiunto record")
 		}
 		_, err = cb.Do(ctx)
 		if err != nil {
