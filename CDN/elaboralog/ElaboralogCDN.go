@@ -353,13 +353,54 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 	Type := fileelements[1]                  //qui prede il tipo di log
 	SEIp := fileelements[3]                  //qui prende l'ip della cache
 	data := fileelements[4]
-	var elenco []string
 
 	elastichost := "http://127.0.0.1:9200"
 	index := "we_accesslog_" + SEIp + "_" + data
 	fmt.Println("index: ", index, Type)
 
 	if Type == "accesslog" { //se il tipo di log è "accesslog"
+		ctx := context.Background()
+
+		//Istanzia client per Elasticsearch
+		client, err := elastic.NewClient(elastic.SetURL(elastichost))
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(401)
+		}
+		//.elastic.SetBasicAuth("user", "secret"))
+
+		_, _, errela := client.Ping(elastichost).Do(ctx)
+		if errela != nil {
+			// Handle error
+			panic(errela)
+		}
+		//fmt.Printf("Elasticsearch returned with code %d and version %s\n", code, info.Version.Number)
+		// Use the IndexExists service to check if a specified index exists.
+		exists, err := client.IndexExists(index).Do(ctx)
+		if err != nil {
+			// Handle error
+			panic(err)
+		}
+		if !exists {
+			// Create a new index.
+			//createIndex, err := client.CreateIndex(index).BodyString(mapping).Do(ctx)
+			createIndex, err := client.CreateIndex(index).Do(ctx)
+
+			if err != nil {
+				// Handle error
+				panic(err)
+			}
+			if !createIndex.Acknowledged {
+				// Not acknowledged
+			}
+		}
+
+		//Creazione client Elasticsearch per inserimenti massivi
+		cb := elastic.NewBulkService(client)
+		if err != nil {
+			panic(err)
+		}
+
 		fmt.Println("inizio scanner")
 		scan := bufio.NewScanner(gr)
 		var saltariga int //per saltare le prime righe inutili
@@ -429,57 +470,8 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 				Ua:          Ua}
 
 			elerecord2, _ := json.Marshal(elerecord)
-			elerecord3 := string(elerecord2)
+			recordjson := string(elerecord2)
 
-			elenco = append(elenco, elerecord3) //mettiamo tutto in una slice
-			//fmt.Println(len(elenco))
-		}
-		fmt.Println(file)
-		fmt.Println(len(elenco))
-
-		ctx := context.Background()
-
-		//Istanzia client per Elasticsearch
-		client, err := elastic.NewClient(elastic.SetURL(elastichost))
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(401)
-		}
-		//.elastic.SetBasicAuth("user", "secret"))
-
-		_, _, errela := client.Ping(elastichost).Do(ctx)
-		if errela != nil {
-			// Handle error
-			panic(errela)
-		}
-		//fmt.Printf("Elasticsearch returned with code %d and version %s\n", code, info.Version.Number)
-		// Use the IndexExists service to check if a specified index exists.
-		exists, err := client.IndexExists(index).Do(ctx)
-		if err != nil {
-			// Handle error
-			panic(err)
-		}
-		if !exists {
-			// Create a new index.
-			//createIndex, err := client.CreateIndex(index).BodyString(mapping).Do(ctx)
-			createIndex, err := client.CreateIndex(index).Do(ctx)
-
-			if err != nil {
-				// Handle error
-				panic(err)
-			}
-			if !createIndex.Acknowledged {
-				// Not acknowledged
-			}
-		}
-
-		//Creazione client Elasticsearch per inserimenti massivi
-		cb := elastic.NewBulkService(client)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println("comincia ingest")
-		for _, recordjson := range elenco {
 			//fmt.Println(recordjson)
 			hasher := md5.New()                         //prepara a fare un hash
 			hasher.Write([]byte(recordjson))            //hasha tutta la linea
