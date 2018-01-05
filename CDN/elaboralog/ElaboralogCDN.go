@@ -432,7 +432,7 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 			elerecord3 := string(elerecord2)
 
 			elenco = append(elenco, elerecord3) //mettiamo tutto in una slice
-			fmt.Println(len(elenco))
+			//fmt.Println(len(elenco))
 		}
 		fmt.Println(file)
 		fmt.Println(len(elenco))
@@ -478,7 +478,7 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 		if err != nil {
 			panic(err)
 		}
-
+		fmt.Println("comincia ingest")
 		for _, recordjson := range elenco {
 			//fmt.Println(recordjson)
 			hasher := md5.New()                         //prepara a fare un hash
