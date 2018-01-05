@@ -353,11 +353,11 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 	Type := fileelements[1]                  //qui prede il tipo di log
 	SEIp := fileelements[3]                  //qui prende l'ip della cache
 	data := fileelements[4]
-	elenco := make([]string, 0, 1000)
+	var elenco []string
 
 	elastichost := "http://127.0.0.1:9200"
-	index := "we_accesslog_" + SEIp + data
-	fmt.Println("index: ", index)
+	index := "we_accesslog_" + SEIp + "_" + data
+	fmt.Println("index: ", index, Type)
 
 	if Type == "accesslog" { //se il tipo di log è "accesslog"
 		scan := bufio.NewScanner(gr)
