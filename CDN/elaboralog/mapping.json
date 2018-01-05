@@ -31,12 +31,12 @@
 				},
 				"suggest_field":{
 					"type":"completion"
-				},
-				"_ttl": {
-					"enabled": true,
-					"default": "10s"
-				  }
-			}
+				}
+			},
+			"_ttl": {
+				"enabled": true,
+				"default": "10s"
+			  }
 		}
 	}
 }
