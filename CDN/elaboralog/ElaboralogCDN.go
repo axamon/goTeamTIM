@@ -483,6 +483,7 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 			req := elastic.NewBulkIndexRequest().Index(index).Type(tipo).Id(Hash).Doc(recordjson)
 			cb.Add(req)
 			fmt.Println("aggiunto record")
+			_, err = cb.Do(ctx)
 		}
 		_, err = cb.Do(ctx)
 		if err != nil {
