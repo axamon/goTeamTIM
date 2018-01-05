@@ -335,8 +335,8 @@ func Leggizip(file string, wg *sync.WaitGroup) {
 }
 
 func Leggizip2(file string, wg *sync.WaitGroup) {
+	ctx := context.Background()
 	defer wg.Done()
-	var elenco []string
 	f, err := os.Open(file)
 	if err != nil {
 		log.Fatal(err)
@@ -359,7 +359,6 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 	index := "we_accesslog_" + SEIp + "_" + data
 	fmt.Println("index: ", index, Type)
 
-	ctx := context.Background()
 	//Istanzia client per Elasticsearch
 	client, err := elastic.NewClient(elastic.SetURL(elastichost))
 	if err != nil {
@@ -396,178 +395,104 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 		}
 	}
 
-	//Creazione client Elasticsearch per inserimenti massivi
-	cb := elastic.NewBulkService(client)
-	if err != nil {
-		panic(err)
-	}
-
-	p, _ := client.BulkProcessor().
+	p, err := client.BulkProcessor().
 		Name("MyBackgroundWorker-1").
 		Workers(2).
 		BulkActions(1000).               // commit if # requests >= 1000
 		BulkSize(2 << 20).               // commit if size of requests >= 2 MB
-		FlushInterval(30 * time.Second). // commit every 30s
+		FlushInterval(10 * time.Second). // commit every 30s
 		Do(ctx)
 
-	if Type == "accesslog" { //se il tipo di log è "accesslog"
-		fmt.Println("inizio scanner")
-		scan := bufio.NewScanner(gr)
-		var saltariga int //per saltare le prime righe inutili
-		for scan.Scan() {
-			if saltariga < 2 { //salta le prime due righe
-				scan.Text()
-				saltariga = saltariga + 1
-				continue
-			}
-			line := scan.Text()
+	if err != nil {
+		os.Exit(7000)
+	}
 
-			s := strings.Split(line, "\t")
-			if len(s) < 5 { // se i parametri sono meno di 20 allora ricomincia il loop, serve a evitare le linee che non ci interessano
-				return
-			}
-			t, err := time.Parse("[02/Jan/2006:15:04:05.000-0700]", s[0]) //converte i timestamp come piacciono a me
-			if err != nil {
-				fmt.Println(err)
-			}
-			Time := t.Format("2006-01-02T15:04:05.000Z") //idem con patate questo è lo stracazzuto ISO8601 meglio c'è solo epoch
-			// fmt.Println(Time)
-			u, err := url.Parse(s[6]) //prendi una URL, trattala male, falla a pezzi per ore...
-			if err != nil {
-				log.Fatal(err)
-			}
-			TTS, _ := strconv.Atoi(s[1])
-			Clientip := s[2]
-			Request := s[3]
-			elements := strings.Split(Request, "/")
-			TCPStatus := elements[0]
-			HTTPStatus, _ := strconv.Atoi(elements[1])
-			//fmt.Println(HTTPStatus)
-			//if HTTPStatus < 400 {
-			//	continue
-			//}
-			Bytes, _ := strconv.Atoi(s[4])
-			Speed := float32(Bytes / TTS)
-			Method := s[5]
-			//Url := s[6]
-			Urlschema := u.Scheme
-			Urlhost := u.Host
-			Urlpath := u.Path
-			Urlquery := u.RawQuery
-			Urlfragment := u.Fragment
-			//gestione url finita
-			Mime := s[7]
-			Ua := s[8]
-
-			elerecord := Accesslog{
-				Type:        Type,
-				Time:        Time,
-				TTS:         TTS,
-				SEIp:        SEIp,
-				Clientip:    Clientip,
-				Request:     Request,
-				TCPStatus:   TCPStatus,
-				HTTPStatus:  HTTPStatus,
-				Bytes:       Bytes,
-				Speed:       Speed,
-				Method:      Method,
-				Urlschema:   Urlschema,
-				Urlhost:     Urlhost,
-				Urlpath:     Urlpath,
-				Urlquery:    Urlquery,
-				Urlfragment: Urlfragment,
-				Mime:        Mime,
-				Ua:          Ua}
-
-			elerecord2, _ := json.Marshal(elerecord)
-			recordjson := string(elerecord2)
-			elenco = append(elenco, recordjson)
+	fmt.Println("inizio scanner")
+	scan := bufio.NewScanner(gr)
+	var saltariga int //per saltare le prime righe inutili
+	for scan.Scan() {
+		if saltariga < 2 { //salta le prime due righe
+			scan.Text()
+			saltariga = saltariga + 1
+			continue
 		}
-		fmt.Println(len(elenco))
-		for _, recordjson := range elenco {
-			//fmt.Println(recordjson)
-			hasher := md5.New()                         //prepara a fare un hash
-			hasher.Write([]byte(recordjson))            //hasha tutta la linea
-			Hash := hex.EncodeToString(hasher.Sum(nil)) //estrae l'hash md5sum in versione quasi human readable
-			//Hash fungerà da indice del record in Elasticsearch, quindi si evitato i doppi inserimenti
-			tipo := "accesslog"
-			req := elastic.NewBulkIndexRequest().Index(index).Type(tipo).Id(Hash).Doc(recordjson)
-			p.Add(req)
+		line := scan.Text()
+
+		s := strings.Split(line, "\t")
+		if len(s) < 5 { // se i parametri sono meno di 20 allora ricomincia il loop, serve a evitare le linee che non ci interessano
+			return
 		}
-		_, err = cb.Do(ctx)
+		t, err := time.Parse("[02/Jan/2006:15:04:05.000-0700]", s[0]) //converte i timestamp come piacciono a me
 		if err != nil {
 			fmt.Println(err)
 		}
-		err = p.Flush()
+		Time := t.Format("2006-01-02T15:04:05.000Z") //idem con patate questo è lo stracazzuto ISO8601 meglio c'è solo epoch
+		// fmt.Println(Time)
+		u, err := url.Parse(s[6]) //prendi una URL, trattala male, falla a pezzi per ore...
 		if err != nil {
-			os.Exit(700)
+			log.Fatal(err)
 		}
-		fmt.Println("ingestato: ", file)
+		Type = "accesslog" //se il tipo di log è "accesslog"
+		TTS, _ := strconv.Atoi(s[1])
+		Clientip := s[2]
+		Request := s[3]
+		elements := strings.Split(Request, "/")
+		TCPStatus := elements[0]
+		HTTPStatus, _ := strconv.Atoi(elements[1])
+		//fmt.Println(HTTPStatus)
+		//if HTTPStatus < 400 {
+		//	continue
+		//}
+		Bytes, _ := strconv.Atoi(s[4])
+		Speed := float32(Bytes / TTS)
+		Method := s[5]
+		//Url := s[6]
+		Urlschema := u.Scheme
+		Urlhost := u.Host
+		Urlpath := u.Path
+		Urlquery := u.RawQuery
+		Urlfragment := u.Fragment
+		//gestione url finita
+		Mime := s[7]
+		Ua := s[8]
 
+		elerecord := Accesslog{
+			Type:        Type,
+			Time:        Time,
+			TTS:         TTS,
+			SEIp:        SEIp,
+			Clientip:    Clientip,
+			Request:     Request,
+			TCPStatus:   TCPStatus,
+			HTTPStatus:  HTTPStatus,
+			Bytes:       Bytes,
+			Speed:       Speed,
+			Method:      Method,
+			Urlschema:   Urlschema,
+			Urlhost:     Urlhost,
+			Urlpath:     Urlpath,
+			Urlquery:    Urlquery,
+			Urlfragment: Urlfragment,
+			Mime:        Mime,
+			Ua:          Ua}
+
+		elerecord2, _ := json.Marshal(elerecord)
+		recordjson := string(elerecord2)
+		//fmt.Println(recordjson)
+		hasher := md5.New()                         //prepara a fare un hash
+		hasher.Write([]byte(recordjson))            //hasha tutta la linea
+		Hash := hex.EncodeToString(hasher.Sum(nil)) //estrae l'hash md5sum in versione quasi human readable
+		//Hash fungerà da indice del record in Elasticsearch, quindi si evitato i doppi inserimenti
+		tipo := "accesslog"
+		req := elastic.NewBulkIndexRequest().Index(index).Type(tipo).Id(Hash).Doc(recordjson)
+		p.Add(req)
 	}
 
-	/* if Type == "ingestlog" {
-		scan := bufio.NewScanner(gr) //mettiamo tutto in un buffer che è rapido
-
-		var saltariga int //per saltare le prime righe inutili
-		for scan.Scan() {
-			if saltariga < 2 { //salta le prime due righe
-				scan.Text()
-				saltariga = saltariga + 1
-				continue
-			}
-			line := scan.Text()
-
-			s := strings.Split(line, " ") //splitta le linee secondo il delimitatore usato nel file di log, cambiare all'occorrenza
-
-			if len(s) < 20 { // se i parametri sono meno di 20 allora ricomincia il loop, serve a evitare le linee che non ci interessano
-				return
-			}
-
-			t, err := time.Parse("[02/Jan/2006:15:04:05.000-0700]", s[0]) //quant'è bello parsare i timestamp in go :)
-			if err != nil {
-				fmt.Println(err)
-			}
-			Time := t.Format("2006-01-02T15:04:05.000Z") //ISO8601 mon amour
-
-			//gestiamo le url secondo l'RFC ... non mi ricordo qual è
-			u, err := url.Parse(s[1]) //prendi una URL, trattala male, falla a pezzi per ore...
-			if err != nil {
-				log.Fatal(err)
-			}
-			//URL := s[1]
-			Urlschema := u.Scheme
-			Urlhost := u.Host
-			Urlpath := u.Path
-			Urlquery := u.RawQuery
-			Urlfragment := u.Fragment
-			ServerIP := s[3]
-			BytesRead, _ := strconv.Atoi(s[4])   //trasforma il valore in int
-			BytesToRead, _ := strconv.Atoi(s[5]) //trasforma il valore in int
-			AssetSize, _ := strconv.Atoi(s[6])   //trasforma il valore in int
-			Status := s[10]
-			IngestStatus := s[15]
-
-			elerecord := Log{
-				Time:         Time,
-				SEIp:         SEIp,
-				Urlschema:    Urlschema,
-				Urlhost:      Urlhost,
-				Urlpath:      Urlpath,
-				Urlquery:     Urlquery,
-				Urlfragment:  Urlfragment,
-				ServerIP:     ServerIP,
-				BytesRead:    BytesRead,
-				BytesToRead:  BytesToRead,
-				AssetSize:    AssetSize,
-				Status:       Status,
-				IngestStatus: IngestStatus}
-			fmt.Println(elerecord)
-
-		}
-		//fmt.Printf("%+v\n", l)
-
-	} */
+	err = p.Flush()
+	if err != nil {
+		os.Exit(700)
+	}
+	fmt.Println("ingestato: ", file)
 
 	return //terminata la Go routine!!! :)
 }
