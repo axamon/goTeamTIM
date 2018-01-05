@@ -46,7 +46,7 @@ func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU()) //esegue una go routine su tutti i processori
 
 	for {
-		res := RedisClient.BRPop(10000000, os.Args[1]).Val()
+		res := RedisClient.BRPop(50000000000, os.Args[1]).Val()
 		/* if err != nil {
 			fmt.Println(err)
 			os.Exit(500)
