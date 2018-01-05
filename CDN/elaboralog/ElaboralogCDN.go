@@ -401,6 +401,7 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 	if err != nil {
 		panic(err)
 	}
+	var n int
 	if Type == "accesslog" { //se il tipo di log è "accesslog"
 		fmt.Println("inizio scanner")
 		scan := bufio.NewScanner(gr)
@@ -481,6 +482,14 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 			tipo := "accesslog"
 			req := elastic.NewBulkIndexRequest().Index(index).Type(tipo).Id(Hash).Doc(recordjson)
 			cb.Add(req)
+			n++
+			if n > 10 {
+				_, err = cb.Do(ctx)
+				if err != nil {
+					fmt.Println(err)
+				}
+			}
+
 			//fmt.Println("aggiunto record")
 		}
 		_, err = cb.Do(ctx)
