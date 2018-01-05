@@ -360,6 +360,7 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 	fmt.Println("index: ", index, Type)
 
 	if Type == "accesslog" { //se il tipo di log è "accesslog"
+		fmt.Println("inizio scanner")
 		scan := bufio.NewScanner(gr)
 		var saltariga int //per saltare le prime righe inutili
 		for scan.Scan() {
