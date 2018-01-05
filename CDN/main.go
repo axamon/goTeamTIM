@@ -34,7 +34,7 @@ func init() {
 	if errore != nil {
 		fmt.Println("Qualcuno ha spento Redis? O sbagli passord? Essere umano che leggi...RIPARA!")
 		fmt.Println("la pwd per redis va impostata così: export REDIS_PWD=***")
-		os.Exit(1)
+		//os.Exit(1)
 	}
 }
 
@@ -46,7 +46,7 @@ func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU()) //esegue una go routine su tutti i processori
 
 	for {
-		res := RedisClient.BRPop(10, os.Args[1]).Val()
+		res := RedisClient.BRPop(10000000, os.Args[1]).Val()
 		/* if err != nil {
 			fmt.Println(err)
 			os.Exit(500)
