@@ -357,6 +357,7 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 
 	elastichost := "http://127.0.0.1:9200"
 	index := "we_accesslog_" + SEIp + data
+	fmt.Println("index: ", index)
 
 	if Type == "accesslog" { //se il tipo di log è "accesslog"
 		scan := bufio.NewScanner(gr)
@@ -390,9 +391,9 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 			TCPStatus := elements[0]
 			HTTPStatus, _ := strconv.Atoi(elements[1])
 			//fmt.Println(HTTPStatus)
-			if HTTPStatus < 400 {
-				continue
-			}
+			//if HTTPStatus < 400 {
+			//	continue
+			//}
 			Bytes, _ := strconv.Atoi(s[4])
 			Speed := float32(Bytes / TTS)
 			Method := s[5]
@@ -432,6 +433,7 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 			elenco = append(elenco, elerecord3) //mettiamo tutto in una slice
 		}
 		fmt.Println(file)
+		fmt.Println(len(elenco))
 
 		ctx := context.Background()
 
@@ -489,6 +491,7 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 		if err != nil {
 			fmt.Println(err)
 		}
+		fmt.Println("ingestato: ", file)
 	}
 
 	if Type == "ingestlog" {
