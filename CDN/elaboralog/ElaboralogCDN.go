@@ -432,6 +432,7 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 			elerecord3 := string(elerecord2)
 
 			elenco = append(elenco, elerecord3) //mettiamo tutto in una slice
+			fmt.Println(len(elenco))
 		}
 		fmt.Println(file)
 		fmt.Println(len(elenco))
