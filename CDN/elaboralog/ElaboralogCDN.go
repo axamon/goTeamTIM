@@ -401,6 +401,15 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 	if err != nil {
 		panic(err)
 	}
+
+	p, _ := client.BulkProcessor().
+		Name("MyBackgroundWorker-1").
+		Workers(2).
+		BulkActions(1000).               // commit if # requests >= 1000
+		BulkSize(2 << 20).               // commit if size of requests >= 2 MB
+		FlushInterval(30 * time.Second). // commit every 30s
+		Do(ctx)
+
 	if Type == "accesslog" { //se il tipo di log è "accesslog"
 		fmt.Println("inizio scanner")
 		scan := bufio.NewScanner(gr)
@@ -475,7 +484,6 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 			elenco = append(elenco, recordjson)
 		}
 		fmt.Println(len(elenco))
-		ctx := context.Background()
 		for _, recordjson := range elenco {
 			//fmt.Println(recordjson)
 			hasher := md5.New()                         //prepara a fare un hash
@@ -484,11 +492,15 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 			//Hash fungerà da indice del record in Elasticsearch, quindi si evitato i doppi inserimenti
 			tipo := "accesslog"
 			req := elastic.NewBulkIndexRequest().Index(index).Type(tipo).Id(Hash).Doc(recordjson)
-			cb.Add(req)
+			p.Add(req)
 		}
 		_, err = cb.Do(ctx)
 		if err != nil {
 			fmt.Println(err)
+		}
+		err = p.Flush()
+		if err != nil {
+			os.Exit(700)
 		}
 		fmt.Println("ingestato: ", file)
 
