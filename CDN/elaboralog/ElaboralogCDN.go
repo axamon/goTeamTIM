@@ -336,7 +336,7 @@ func Leggizip(file string, wg *sync.WaitGroup) {
 
 func Leggizip2(file string, wg *sync.WaitGroup) {
 	defer wg.Done()
-
+	var elenco []string
 	f, err := os.Open(file)
 	if err != nil {
 		log.Fatal(err)
@@ -401,7 +401,6 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 	if err != nil {
 		panic(err)
 	}
-	var n int
 	if Type == "accesslog" { //se il tipo di log è "accesslog"
 		fmt.Println("inizio scanner")
 		scan := bufio.NewScanner(gr)
@@ -473,7 +472,11 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 
 			elerecord2, _ := json.Marshal(elerecord)
 			recordjson := string(elerecord2)
-
+			elenco = append(elenco, recordjson)
+		}
+		fmt.Println(len(elenco))
+		ctx := context.Background()
+		for _, recordjson := range elenco {
 			//fmt.Println(recordjson)
 			hasher := md5.New()                         //prepara a fare un hash
 			hasher.Write([]byte(recordjson))            //hasha tutta la linea
@@ -482,27 +485,14 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 			tipo := "accesslog"
 			req := elastic.NewBulkIndexRequest().Index(index).Type(tipo).Id(Hash).Doc(recordjson)
 			cb.Add(req)
-			n++
-			if n > 10 {
-				_, err = cb.Do(ctx)
-				if err != nil {
-					fmt.Println(err)
-				}
-			}
-
-			//fmt.Println("aggiunto record")
 		}
 		_, err = cb.Do(ctx)
 		if err != nil {
 			fmt.Println(err)
 		}
 		fmt.Println("ingestato: ", file)
+
 	}
-	_, err = cb.Do(ctx)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println("ingestato: ", file)
 
 	/* if Type == "ingestlog" {
 		scan := bufio.NewScanner(gr) //mettiamo tutto in un buffer che è rapido
