@@ -1,6 +1,8 @@
 package elaboralog
 
 import (
+	"context"
+	"crypto/md5"
 	"net/url"
 	"strconv"
 	"sync"
@@ -8,8 +10,10 @@ import (
 
 	"github.com/go-redis/redis"
 	"github.com/klauspost/pgzip"
+	"github.com/olivere/elastic"
 	//"compress/gzip"
 	"bufio"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -260,6 +264,230 @@ func Leggizip(file string, wg *sync.WaitGroup) {
 				}
 				elenco = make([]string, 0, 1000) //ripulisce la slice
 			}
+		}
+	}
+
+	if Type == "ingestlog" {
+		scan := bufio.NewScanner(gr) //mettiamo tutto in un buffer che è rapido
+
+		var saltariga int //per saltare le prime righe inutili
+		for scan.Scan() {
+			if saltariga < 2 { //salta le prime due righe
+				scan.Text()
+				saltariga = saltariga + 1
+				continue
+			}
+			line := scan.Text()
+
+			s := strings.Split(line, " ") //splitta le linee secondo il delimitatore usato nel file di log, cambiare all'occorrenza
+
+			if len(s) < 20 { // se i parametri sono meno di 20 allora ricomincia il loop, serve a evitare le linee che non ci interessano
+				return
+			}
+
+			t, err := time.Parse("[02/Jan/2006:15:04:05.000-0700]", s[0]) //quant'è bello parsare i timestamp in go :)
+			if err != nil {
+				fmt.Println(err)
+			}
+			Time := t.Format("2006-01-02T15:04:05.000Z") //ISO8601 mon amour
+
+			//gestiamo le url secondo l'RFC ... non mi ricordo qual è
+			u, err := url.Parse(s[1]) //prendi una URL, trattala male, falla a pezzi per ore...
+			if err != nil {
+				log.Fatal(err)
+			}
+			//URL := s[1]
+			Urlschema := u.Scheme
+			Urlhost := u.Host
+			Urlpath := u.Path
+			Urlquery := u.RawQuery
+			Urlfragment := u.Fragment
+			ServerIP := s[3]
+			BytesRead, _ := strconv.Atoi(s[4])   //trasforma il valore in int
+			BytesToRead, _ := strconv.Atoi(s[5]) //trasforma il valore in int
+			AssetSize, _ := strconv.Atoi(s[6])   //trasforma il valore in int
+			Status := s[10]
+			IngestStatus := s[15]
+
+			elerecord := Log{
+				Time:         Time,
+				SEIp:         SEIp,
+				Urlschema:    Urlschema,
+				Urlhost:      Urlhost,
+				Urlpath:      Urlpath,
+				Urlquery:     Urlquery,
+				Urlfragment:  Urlfragment,
+				ServerIP:     ServerIP,
+				BytesRead:    BytesRead,
+				BytesToRead:  BytesToRead,
+				AssetSize:    AssetSize,
+				Status:       Status,
+				IngestStatus: IngestStatus}
+			fmt.Println(elerecord)
+
+		}
+		//fmt.Printf("%+v\n", l)
+
+	}
+
+	return //terminata la Go routine!!! :)
+}
+
+func Leggizip2(file string, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	f, err := os.Open(file)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+	// gr, err := gzip.NewReader(f)
+	gr, err := pgzip.NewReaderN(f, 1024, 2048) //sfrutta il gzip con steroidi che legge nel futuro per andare più veloce e meglio assai del nomale gzip
+
+	if err != nil { //se però si impippa qualcosa allora blocca tutto
+		log.Fatal(err)
+		os.Exit(1)
+	}
+
+	fileelements := strings.Split(file, "_") //prende il nome del file di log e recupera i campi utili
+	Type := fileelements[1]                  //qui prede il tipo di log
+	SEIp := fileelements[3]                  //qui prende l'ip della cache
+	data := fileelements[4]
+	elenco := make([]string, 0, 1000)
+
+	elastichost := "http://127.0.0.1:9200"
+	index := "we_accesslog_" + SEIp + data
+
+	if Type == "accesslog" { //se il tipo di log è "accesslog"
+		scan := bufio.NewScanner(gr)
+		var saltariga int //per saltare le prime righe inutili
+		for scan.Scan() {
+			if saltariga < 2 { //salta le prime due righe
+				scan.Text()
+				saltariga = saltariga + 1
+				continue
+			}
+			line := scan.Text()
+
+			s := strings.Split(line, "\t")
+			if len(s) < 5 { // se i parametri sono meno di 20 allora ricomincia il loop, serve a evitare le linee che non ci interessano
+				return
+			}
+			t, err := time.Parse("[02/Jan/2006:15:04:05.000-0700]", s[0]) //converte i timestamp come piacciono a me
+			if err != nil {
+				fmt.Println(err)
+			}
+			Time := t.Format("2006-01-02T15:04:05.000Z") //idem con patate questo è lo stracazzuto ISO8601 meglio c'è solo epoch
+			// fmt.Println(Time)
+			u, err := url.Parse(s[6]) //prendi una URL, trattala male, falla a pezzi per ore...
+			if err != nil {
+				log.Fatal(err)
+			}
+			TTS, _ := strconv.Atoi(s[1])
+			Clientip := s[2]
+			Request := s[3]
+			elements := strings.Split(Request, "/")
+			TCPStatus := elements[0]
+			HTTPStatus, _ := strconv.Atoi(elements[1])
+			//fmt.Println(HTTPStatus)
+			if HTTPStatus < 400 {
+				continue
+			}
+			Bytes, _ := strconv.Atoi(s[4])
+			Speed := float32(Bytes / TTS)
+			Method := s[5]
+			//Url := s[6]
+			Urlschema := u.Scheme
+			Urlhost := u.Host
+			Urlpath := u.Path
+			Urlquery := u.RawQuery
+			Urlfragment := u.Fragment
+			//gestione url finita
+			Mime := s[7]
+			Ua := s[8]
+
+			elerecord := Accesslog{
+				Type:        Type,
+				Time:        Time,
+				TTS:         TTS,
+				SEIp:        SEIp,
+				Clientip:    Clientip,
+				Request:     Request,
+				TCPStatus:   TCPStatus,
+				HTTPStatus:  HTTPStatus,
+				Bytes:       Bytes,
+				Speed:       Speed,
+				Method:      Method,
+				Urlschema:   Urlschema,
+				Urlhost:     Urlhost,
+				Urlpath:     Urlpath,
+				Urlquery:    Urlquery,
+				Urlfragment: Urlfragment,
+				Mime:        Mime,
+				Ua:          Ua}
+
+			elerecord2, _ := json.Marshal(elerecord)
+			elerecord3 := string(elerecord2)
+
+			elenco = append(elenco, elerecord3) //mettiamo tutto in una slice
+		}
+		fmt.Println(file)
+
+		ctx := context.Background()
+
+		//Istanzia client per Elasticsearch
+		client, err := elastic.NewClient(elastic.SetURL(elastichost))
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(401)
+		}
+		//.elastic.SetBasicAuth("user", "secret"))
+
+		_, _, errela := client.Ping(elastichost).Do(ctx)
+		if errela != nil {
+			// Handle error
+			panic(errela)
+		}
+		//fmt.Printf("Elasticsearch returned with code %d and version %s\n", code, info.Version.Number)
+		// Use the IndexExists service to check if a specified index exists.
+		exists, err := client.IndexExists(index).Do(ctx)
+		if err != nil {
+			// Handle error
+			panic(err)
+		}
+		if !exists {
+			// Create a new index.
+			//createIndex, err := client.CreateIndex(index).BodyString(mapping).Do(ctx)
+			createIndex, err := client.CreateIndex(index).Do(ctx)
+
+			if err != nil {
+				// Handle error
+				panic(err)
+			}
+			if !createIndex.Acknowledged {
+				// Not acknowledged
+			}
+		}
+
+		//Creazione client Elasticsearch per inserimenti massivi
+		cb := elastic.NewBulkService(client)
+		if err != nil {
+			panic(err)
+		}
+
+		for _, recordjson := range elenco {
+			//fmt.Println(recordjson)
+			hasher := md5.New()                         //prepara a fare un hash
+			hasher.Write([]byte(recordjson))            //hasha tutta la linea
+			Hash := hex.EncodeToString(hasher.Sum(nil)) //estrae l'hash md5sum in versione quasi human readable
+			//Hash fungerà da indice del record in Elasticsearch, quindi si evitato i doppi inserimenti
+			tipo := "accesslog"
+			req := elastic.NewBulkIndexRequest().Index(index).Type(tipo).Id(Hash).Doc(recordjson)
+			cb.Add(req)
+		}
+		_, err = cb.Do(ctx)
+		if err != nil {
+			fmt.Println(err)
 		}
 	}
 

@@ -2,10 +2,8 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"projects/goTeamTIM/CDN/elaboralog"
-	"projects/goTeamTIM/elasticTIM"
 	"runtime"
 	"sync"
 )
@@ -26,12 +24,8 @@ func main() {
 	for _, file := range os.Args[1:] {
 		fmt.Println(file)
 		wg.Add(1)
-		go elaboralog.Leggizip(file, &wg)
+		go elaboralog.Leggizip2(file, &wg)
 	}
 	wg.Wait()
-	dat, _ := ioutil.ReadFile("mapping.json")
-	mapping := string(dat)
-	elasticTIM.IngestaInElastic("http://127.0.0.1:9200", "cdn", "log", Listalog, mapping)
-
 	return
 }
