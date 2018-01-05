@@ -385,6 +385,7 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 		dat, _ := ioutil.ReadFile("mapping.json")
 		mapping := string(dat)
 		createIndex, err := client.CreateIndex(index).BodyString(mapping).Do(ctx)
+		fmt.Println("creato indice: ", index)
 
 		if err != nil {
 			// Handle error
