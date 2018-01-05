@@ -480,7 +480,7 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 			tipo := "accesslog"
 			req := elastic.NewBulkIndexRequest().Index(index).Type(tipo).Id(Hash).Doc(recordjson)
 			cb.Add(req)
-			//fmt.Println("aggiunto record")
+			fmt.Println("aggiunto record")
 		}
 		_, err = cb.Do(ctx)
 		if err != nil {
@@ -488,8 +488,13 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 		}
 		fmt.Println("ingestato: ", file)
 	}
+	_, err = cb.Do(ctx)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("ingestato: ", file)
 
-	if Type == "ingestlog" {
+	/* if Type == "ingestlog" {
 		scan := bufio.NewScanner(gr) //mettiamo tutto in un buffer che è rapido
 
 		var saltariga int //per saltare le prime righe inutili
@@ -550,7 +555,7 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 		}
 		//fmt.Printf("%+v\n", l)
 
-	}
+	} */
 
 	return //terminata la Go routine!!! :)
 }
