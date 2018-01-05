@@ -356,7 +356,7 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 	data := fileelements[4]
 
 	elastichost := "http://127.0.0.1:9200"
-	index := "we_accesslog_" + SEIp + "_" + data
+	index := "we_accesslog_" + data
 	fmt.Println("index: ", index, Type)
 
 	//Istanzia client per Elasticsearch
@@ -397,7 +397,7 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 
 	p, err := client.BulkProcessor().
 		Name("MyBackgroundWorker-1").
-		Workers(2).
+		Workers(4).
 		BulkActions(1000).               // commit if # requests >= 1000
 		BulkSize(2 << 20).               // commit if size of requests >= 2 MB
 		FlushInterval(10 * time.Second). // commit every 30s
