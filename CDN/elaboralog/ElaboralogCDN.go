@@ -3,6 +3,7 @@ package elaboralog
 import (
 	"context"
 	"crypto/md5"
+	"io/ioutil"
 	"net/url"
 	"strconv"
 	"sync"
@@ -383,8 +384,9 @@ func Leggizip2(file string, wg *sync.WaitGroup) {
 		}
 		if !exists {
 			// Create a new index.
-			//createIndex, err := client.CreateIndex(index).BodyString(mapping).Do(ctx)
-			createIndex, err := client.CreateIndex(index).Do(ctx)
+			dat, _ := ioutil.ReadFile("mapping.json")
+			mapping := string(dat)
+			createIndex, err := client.CreateIndex(index).BodyString(mapping).Do(ctx)
 
 			if err != nil {
 				// Handle error
