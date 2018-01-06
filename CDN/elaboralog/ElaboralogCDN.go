@@ -285,7 +285,8 @@ func Leggizip(file string, wg *sync.WaitGroup) {
 
 	err = p.Flush()
 	if err != nil {
-		os.Exit(700)
+		//os.Exit(700)
+		fmt.Println(err)
 	}
 	fmt.Println("ingestato: ", file)
 
