@@ -240,6 +240,9 @@ func Leggizip(file string, wg *sync.WaitGroup) {
 		//Url := s[6]
 		Urlschema := u.Scheme
 		Urlhost := u.Host
+		if strings.Contains(Urlhost, ".se.") == true {
+			Urlhost = strings.Split(Urlhost, ".se.")[1]
+		}
 		Urlpath := u.Path
 		Urlquery := u.RawQuery
 		Urlfragment := u.Fragment
