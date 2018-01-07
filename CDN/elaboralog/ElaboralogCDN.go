@@ -144,10 +144,11 @@ func Leggizip(file string, wg *sync.WaitGroup) {
 	fileelements := strings.Split(file, "_") //prende il nome del file di log e recupera i campi utili
 	Type := fileelements[1]                  //qui prede il tipo di log
 	SEIp := fileelements[3]                  //qui prende l'ip della cache
-	data := fileelements[4]
+	//data := fileelements[4]
 
 	elastichost := "http://127.0.0.1:9200"
-	index := "errori_accesslog_" + data
+	//index := "errori_accesslog_" + data
+	index := "errori"
 	fmt.Println("index: ", index, Type)
 
 	//Istanzia client per Elasticsearch
