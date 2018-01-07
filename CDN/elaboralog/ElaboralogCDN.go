@@ -275,7 +275,7 @@ func Leggizip(file string, wg *sync.WaitGroup) {
 
 		elerecord2, _ := json.Marshal(elerecord)
 		recordjson := string(elerecord2)
-		//fmt.Println(recordjson)
+		fmt.Println(recordjson)
 		hasher := md5.New()                         //prepara a fare un hash
 		hasher.Write([]byte(recordjson))            //hasha tutta la linea
 		Hash := hex.EncodeToString(hasher.Sum(nil)) //estrae l'hash md5sum in versione quasi human readable
