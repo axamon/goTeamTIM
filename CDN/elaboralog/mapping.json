@@ -5,38 +5,26 @@
 	},
 	"mappings":{
 		"accesslog":{
+			"_source": {
+				"enabled": false
+			  },
 			"properties":{
-				"IdStr":{
-					"type":"keyword"
-				},
-				"ScreenName":{
-					"type":"keyword"
-				},
-				"FullText":{
-					"type":"text",
-					"store": true,
-					"fielddata": true
-				},
-				"image":{
-					"type":"keyword"
-				},
-				"CreatedAt":{
+				"Time":{
 					"type":"date"
 				},
-				"tags":{
+				"Clientip":{
+					"type":"ip"
+				},
+				"SEIP":{
+					"type":"ip"
+				},
+				"HTTPStatus":{
 					"type":"keyword"
 				},
-				"location":{
+				"Urlhost":{
 					"type":"keyword"
-				},
-				"suggest_field":{
-					"type":"completion"
 				}
-			},
-			"_ttl": {
-				"enabled": true,
-				"default": "10s"
-			  }
+			}
 		}
 	}
 }

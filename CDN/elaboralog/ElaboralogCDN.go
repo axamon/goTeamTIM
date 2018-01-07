@@ -147,7 +147,7 @@ func Leggizip(file string, wg *sync.WaitGroup) {
 	data := fileelements[4]
 
 	elastichost := "http://127.0.0.1:9200"
-	index := "we_accesslog_" + data
+	index := "Errori_accesslog_" + data
 	fmt.Println("index: ", index, Type)
 
 	//Istanzia client per Elasticsearch
@@ -231,9 +231,9 @@ func Leggizip(file string, wg *sync.WaitGroup) {
 		TCPStatus := elements[0]
 		HTTPStatus, _ := strconv.Atoi(elements[1])
 		//fmt.Println(HTTPStatus)
-		//if HTTPStatus < 400 {
-		//	continue
-		//}
+		if HTTPStatus < 400 {
+			continue
+		}
 		Bytes, _ := strconv.Atoi(s[4])
 		Speed := float32(Bytes / TTS)
 		Method := s[5]
@@ -249,6 +249,7 @@ func Leggizip(file string, wg *sync.WaitGroup) {
 		//gestione url finita
 		Mime := s[7]
 		Ua := s[8]
+		//Ui := Clientip + Ua
 
 		elerecord := Accesslog{
 			Type:        Type,
