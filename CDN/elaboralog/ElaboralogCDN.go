@@ -147,7 +147,7 @@ func Leggizip(file string, wg *sync.WaitGroup) {
 	data := fileelements[4]
 
 	elastichost := "http://127.0.0.1:9200"
-	index := "Errori_accesslog_" + data
+	index := "errori_accesslog_" + data
 	fmt.Println("index: ", index, Type)
 
 	//Istanzia client per Elasticsearch
