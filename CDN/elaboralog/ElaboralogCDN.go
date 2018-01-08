@@ -2,18 +2,18 @@ package elaboralog
 
 import (
 	"context"
-	"crypto/md5"
 	"io/ioutil"
 	"net/url"
 	"strconv"
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/klauspost/pgzip"
 	"github.com/olivere/elastic"
 	//"compress/gzip"
 	"bufio"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -144,11 +144,11 @@ func Leggizip(file string, wg *sync.WaitGroup) {
 	fileelements := strings.Split(file, "_") //prende il nome del file di log e recupera i campi utili
 	Type := fileelements[1]                  //qui prede il tipo di log
 	SEIp := fileelements[3]                  //qui prende l'ip della cache
-	//data := fileelements[4]
+	data := fileelements[4]
 
 	elastichost := "http://127.0.0.1:9200"
-	//index := "errori_accesslog_" + data
-	index := "errori"
+	index := "we_accesslog_" + data
+	//index := "errori"
 	fmt.Println("index: ", index, Type)
 
 	//Istanzia client per Elasticsearch
@@ -175,6 +175,7 @@ func Leggizip(file string, wg *sync.WaitGroup) {
 		// Create a new index.
 		dat, _ := ioutil.ReadFile("mapping.json")
 		mapping := string(dat)
+		fmt.Println(mapping)
 		createIndex, err := client.CreateIndex(index).BodyString(mapping).Do(ctx)
 		fmt.Println("creato indice: ", index)
 
@@ -212,7 +213,7 @@ func Leggizip(file string, wg *sync.WaitGroup) {
 
 		s := strings.Split(line, "\t")
 		if len(s) < 5 { // se i parametri sono meno di 20 allora ricomincia il loop, serve a evitare le linee che non ci interessano
-			return
+			continue
 		}
 		t, err := time.Parse("[02/Jan/2006:15:04:05.000-0700]", s[0]) //converte i timestamp come piacciono a me
 		if err != nil {
@@ -276,12 +277,14 @@ func Leggizip(file string, wg *sync.WaitGroup) {
 		elerecord2, _ := json.Marshal(elerecord)
 		recordjson := string(elerecord2)
 		fmt.Println(recordjson)
-		hasher := md5.New()                         //prepara a fare un hash
+		/* hasher := md5.New()                         //prepara a fare un hash
 		hasher.Write([]byte(recordjson))            //hasha tutta la linea
 		Hash := hex.EncodeToString(hasher.Sum(nil)) //estrae l'hash md5sum in versione quasi human readable
-		//Hash fungerà da indice del record in Elasticsearch, quindi si evitato i doppi inserimenti
+		//Hash fungerà da indice del record in Elasticsearch, quindi si evitato i doppi inserimenti */
 		tipo := "accesslog"
-		req := elastic.NewBulkIndexRequest().Index(index).Type(tipo).Id(Hash).Doc(recordjson)
+		idrecord, _ := uuid.NewUUID()
+		iddrecord := idrecord.String()
+		req := elastic.NewBulkIndexRequest().Index(index).Type(tipo).Id(iddrecord).Doc(recordjson)
 		p.Add(req)
 	}
 
