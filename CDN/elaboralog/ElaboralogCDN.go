@@ -233,9 +233,9 @@ func Leggizip(file string, wg *sync.WaitGroup) {
 		TCPStatus := elements[0]
 		HTTPStatus, _ := strconv.Atoi(elements[1])
 		//fmt.Println(HTTPStatus)
-		if HTTPStatus < 400 {
-			continue
-		}
+		//if HTTPStatus < 400 {
+		//	continue
+		//}
 		Bytes, _ := strconv.Atoi(s[4])
 		Speed := float32(Bytes / TTS)
 		Method := s[5]
