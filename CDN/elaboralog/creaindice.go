@@ -75,7 +75,7 @@ func creaindice(elastichost, index string) {
 		//fmt.Println(mapping)
 		createIndex, err := client.CreateIndex(index).BodyString(mapping).Do(ctx)
 
-		time.Sleep(10 * time.Second)
+		time.Sleep(5 * time.Second)
 		if err != nil {
 			// Handle error
 			panic(err)
@@ -83,7 +83,7 @@ func creaindice(elastichost, index string) {
 		if !createIndex.Acknowledged {
 			panic(err)
 		}
-		time.Sleep(10 * time.Second)
+		//time.Sleep(10 * time.Second)
 		fmt.Println("creato indice: ", index)
 	}
 }
