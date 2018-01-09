@@ -47,6 +47,7 @@ func main() {
 
 	status := flag.Int("status", 100, "minimo http status da ingestare, se metti 400 prenderà gli status da 400 in su")
 	elastichost := flag.String("elastichost", "http://127.0.0.1:9200", "host dove contattare elasticsearch")
+	flag.Parse()
 
 	for _, file := range os.Args[1:] {
 		if strings.HasPrefix(file, "--") {
