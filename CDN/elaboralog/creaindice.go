@@ -50,6 +50,7 @@ func creaindice(elastichost, index string) {
 		if !createIndex.Acknowledged {
 			panic(err)
 		}
+		time.Sleep(10 * time.Second)
 		fmt.Println("creato indice: ", index)
 	}
 }

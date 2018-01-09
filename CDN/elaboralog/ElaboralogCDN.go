@@ -2,7 +2,6 @@ package elaboralog
 
 import (
 	"context"
-	"io/ioutil"
 	"net/url"
 	"strconv"
 	"sync"
@@ -126,7 +125,7 @@ type Ingestlog struct {
 
 //Leggizip riceve come argomento un file CDN zippato e lo processa
 func Leggizip(elastichost, file string, wg *sync.WaitGroup, status int) {
-	fmt.Println(status)
+	//fmt.Println(status)
 	ctx := context.Background()
 	defer wg.Done()
 	f, err := os.Open(file)
@@ -149,8 +148,6 @@ func Leggizip(elastichost, file string, wg *sync.WaitGroup, status int) {
 
 	index := "we_accesslog_" + data
 	creaindice(elastichost, index)
-	time.Sleep(5 * time.Second)
-	//index := "errori"
 	fmt.Println("index: ", index, Type)
 
 	//Istanzia client per Elasticsearch
@@ -173,7 +170,7 @@ func Leggizip(elastichost, file string, wg *sync.WaitGroup, status int) {
 		// Handle error
 		panic(err)
 	}
-	if !exists {
+	/* if !exists {
 		// Create a new index.
 		dat, _ := ioutil.ReadFile("mapping.json")
 		mapping := string(dat)
@@ -189,7 +186,7 @@ func Leggizip(elastichost, file string, wg *sync.WaitGroup, status int) {
 			panic(err)
 		}
 		fmt.Println("creato indice: ", index)
-	}
+	} */
 
 	p, err := client.BulkProcessor().
 		Name("MyBackgroundWorker-1").
