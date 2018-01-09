@@ -125,7 +125,7 @@ type Ingestlog struct {
 // var wg = sizedwaitgroup.New(250) //massimo numero di go routine per volta
 
 //Leggizip riceve come argomento un file CDN zippato e lo processa
-func Leggizip(file string, wg *sync.WaitGroup) {
+func Leggizip(file string, wg *sync.WaitGroup, status int) {
 	ctx := context.Background()
 	defer wg.Done()
 	f, err := os.Open(file)
@@ -233,9 +233,9 @@ func Leggizip(file string, wg *sync.WaitGroup) {
 		TCPStatus := elements[0]
 		HTTPStatus, _ := strconv.Atoi(elements[1])
 		//fmt.Println(HTTPStatus)
-		//if HTTPStatus < 400 {
-		//	continue
-		//}
+		if HTTPStatus < status {
+			continue
+		}
 		Bytes, _ := strconv.Atoi(s[4])
 		Speed := float32(Bytes / TTS)
 		Method := s[5]

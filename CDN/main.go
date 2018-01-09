@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"projects/goTeamTIM/CDN/elaboralog"
@@ -43,10 +44,12 @@ func main() {
 
 	runtime.GOMAXPROCS(runtime.NumCPU()) //esegue una go routine su tutti i processori
 
+	status := flag.Int("status", 100, "minimo http status da ingestare, se metti 400 prenderà gli status da 400 in su")
+
 	for _, file := range os.Args[1:] {
 		fmt.Println(file)
 		wg.Add(1)
-		go elaboralog.Leggizip(file, &wg)
+		go elaboralog.Leggizip(file, &wg, *status)
 		wg.Wait()
 	}
 	return
