@@ -16,9 +16,6 @@ const mapping = `{
 		},
 		"mappings":{
 			"accesslog":{
-				"_source": {
-					"enabled": false
-				  },
 				"properties":{
 					"Time":{
 						"type":"date"
