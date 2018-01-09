@@ -165,7 +165,8 @@ func Leggizip(elastichost, file string, wg *sync.WaitGroup, status int) {
 	}
 	//fmt.Printf("Elasticsearch returned with code %d and version %s\n", code, info.Version.Number)
 	// Use the IndexExists service to check if a specified index exists.
-	exists, err := client.IndexExists(index).Do(ctx)
+	//exists, err := client.IndexExists(index).Do(ctx)
+	_, err = client.IndexExists(index).Do(ctx)
 	if err != nil {
 		// Handle error
 		panic(err)
