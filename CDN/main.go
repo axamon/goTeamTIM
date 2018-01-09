@@ -46,6 +46,7 @@ func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU()) //esegue una go routine su tutti i processori
 
 	status := flag.Int("status", 100, "minimo http status da ingestare, se metti 400 prenderà gli status da 400 in su")
+	elastichost := flag.String("elastichost", "http://127.0.0.1:9200", "host dove contattare elasticsearch")
 
 	for _, file := range os.Args[1:] {
 		if strings.HasPrefix(file, "--") {
@@ -53,7 +54,7 @@ func main() {
 		}
 		fmt.Println(file)
 		wg.Add(1)
-		go elaboralog.Leggizip(file, &wg, *status)
+		go elaboralog.Leggizip(*elastichost, file, &wg, *status)
 		wg.Wait()
 	}
 	return

@@ -125,7 +125,7 @@ type Ingestlog struct {
 // var wg = sizedwaitgroup.New(250) //massimo numero di go routine per volta
 
 //Leggizip riceve come argomento un file CDN zippato e lo processa
-func Leggizip(file string, wg *sync.WaitGroup, status int) {
+func Leggizip(elastichost, file string, wg *sync.WaitGroup, status int) {
 	ctx := context.Background()
 	defer wg.Done()
 	f, err := os.Open(file)
@@ -146,8 +146,8 @@ func Leggizip(file string, wg *sync.WaitGroup, status int) {
 	SEIp := fileelements[3]                  //qui prende l'ip della cache
 	data := fileelements[4]
 
-	elastichost := "http://127.0.0.1:9200"
 	index := "we_accesslog_" + data
+	creaindice(elastichost, index)
 	//index := "errori"
 	fmt.Println("index: ", index, Type)
 
