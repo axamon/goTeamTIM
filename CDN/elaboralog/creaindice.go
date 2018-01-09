@@ -14,7 +14,7 @@ import (
 
 //var index = "we_accesslog_20171115"
 
-func main(elastichost, index string) {
+func creaindice(elastichost, index string) {
 	ctx := context.Background()
 	client, err := elastic.NewClient(elastic.SetURL(elastichost))
 	if err != nil {

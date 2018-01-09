@@ -149,6 +149,7 @@ func Leggizip(elastichost, file string, wg *sync.WaitGroup, status int) {
 
 	index := "we_accesslog_" + data
 	creaindice(elastichost, index)
+	time.Sleep(5 * time.Second)
 	//index := "errori"
 	fmt.Println("index: ", index, Type)
 
