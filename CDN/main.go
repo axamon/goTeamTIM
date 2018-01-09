@@ -56,7 +56,8 @@ func main() {
 		fmt.Println(file)
 		wg.Add(1)
 		go elaboralog.Leggizip(*elastichost, file, &wg, *status)
-		wg.Wait()
+
 	}
+	wg.Wait()
 	return
 }
