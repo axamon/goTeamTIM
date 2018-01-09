@@ -191,9 +191,9 @@ func Leggizip(elastichost, file string, wg *sync.WaitGroup, status int) {
 
 	p, err := client.BulkProcessor().
 		Name("MyBackgroundWorker-1").
-		Workers(4).
-		BulkActions(10000).              // commit if # requests >= 1000
-		BulkSize(5 << 20).               // commit if size of requests >= 2 MB
+		Workers(10).
+		BulkActions(100000).             // commit if # requests >= 1000
+		BulkSize(10 << 20).              // commit if size of requests >= 2 MB
 		FlushInterval(60 * time.Second). // commit every 30s
 		Do(ctx)
 
