@@ -146,7 +146,7 @@ func Leggizip(elastichost, file string, wg *sync.WaitGroup, status int) {
 	SEIp := fileelements[3]                  //qui prende l'ip della cache
 	data := fileelements[4]
 
-	index := "we_accesslog_" + data
+	index := "we_accesslog_" + data + SEIp
 	creaindice(elastichost, index)
 	fmt.Println("index: ", index, Type)
 
