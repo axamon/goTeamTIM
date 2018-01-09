@@ -6,6 +6,7 @@ import (
 	"os"
 	"projects/goTeamTIM/CDN/elaboralog"
 	"runtime"
+	"strings"
 	"sync"
 )
 
@@ -47,6 +48,9 @@ func main() {
 	status := flag.Int("status", 100, "minimo http status da ingestare, se metti 400 prenderà gli status da 400 in su")
 
 	for _, file := range os.Args[1:] {
+		if strings.HasPrefix(file, "--") {
+			continue
+		}
 		fmt.Println(file)
 		wg.Add(1)
 		go elaboralog.Leggizip(file, &wg, *status)
