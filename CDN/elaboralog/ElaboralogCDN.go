@@ -177,15 +177,16 @@ func Leggizip(file string, wg *sync.WaitGroup, status int) {
 		mapping := string(dat)
 		fmt.Println(mapping)
 		createIndex, err := client.CreateIndex(index).BodyString(mapping).Do(ctx)
-		fmt.Println("creato indice: ", index)
 
+		time.Sleep(1 * time.Second)
 		if err != nil {
 			// Handle error
 			panic(err)
 		}
 		if !createIndex.Acknowledged {
-			// Not acknowledged
+			panic(err)
 		}
+		fmt.Println("creato indice: ", index)
 	}
 
 	p, err := client.BulkProcessor().
@@ -233,7 +234,7 @@ func Leggizip(file string, wg *sync.WaitGroup, status int) {
 		TCPStatus := elements[0]
 		HTTPStatus, _ := strconv.Atoi(elements[1])
 		//fmt.Println(HTTPStatus)
-		if HTTPStatus < status {
+		if HTTPStatus < status { // status è un int passato dalla main function
 			continue
 		}
 		Bytes, _ := strconv.Atoi(s[4])
