@@ -126,6 +126,7 @@ type Ingestlog struct {
 
 //Leggizip riceve come argomento un file CDN zippato e lo processa
 func Leggizip(elastichost, file string, wg *sync.WaitGroup, status int) {
+	fmt.Println(status)
 	ctx := context.Background()
 	defer wg.Done()
 	f, err := os.Open(file)
